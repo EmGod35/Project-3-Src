@@ -1,0 +1,458 @@
+<!-- Name: Emily Godwin
+	 File: SolarSystem.html
+	 CMSC 405 Project 3
+	 Description: This project uses Three.js to create a 3D animation scene.
+	 It employs JavaScript to render the scene, camera, lighting and
+	each Three.js object. The scene is the solar system, which employs the use
+	of three.min.js, three.js, and BufferedGeometry.js classes to create
+	spheres, a torus and to created the camera and lighting. The scene also employs
+	texture mapping, which allows the objects to have a little more life than simply
+	spheres floating in space. I employed some hierarchical modeling when applying the
+	rotations to the planets, and giving Earth the Moon. Overall, however the scene did not
+	need much heirarchy due to the unique nature of each planet.
+	Source:
+	threejs examples from Introduction to Computer Graphics, specifically modeling-starter.html
+	three.js documentation found at https://threejs.org
+	torus https://threejs.org/docs/#api/en/geometries/TorusGeometry
+	Image sources: Solar System Scope
+-->
+<!DOCTYPE html>
+<head>
+<meta charset="UTF-8">
+<title>Our Solar System</title>
+<style>
+      html, body {
+		overflow: hidden;  /* Make sure we don't get scroll bars. */
+		background: url(galaxy_bg.png)left center; /*background image*/
+    }
+    canvas {
+        display: block; /* The default display, inline, would add small margin below the canvas */
+    }
+	h2.class1{
+		color: rgb(194, 53, 212);
+		font-size: 30px;
+		font-family: fantasy, "papyrus";
+		border-width: 1; 
+		padding: 20px;
+		border: solid; 
+		text-align: center
+	}
+	
+	label.class2{
+		color:aqua;
+		font-family: fantasy, "Blippo";
+		font-size: 30px;
+		padding: 20px;
+	}
+	b.bclass{
+		color:rgb(160, 235, 111);
+		font-family: fantasy, "Blippo";
+		font-size: 18px;
+		padding: 20px;
+	}
+
+</style>
+<script src="three.min.js"></script>
+<script src="three.js"></script>
+<script src="BufferGeometry.js"></script>
+<script>
+
+"use strict";
+
+var scene, camera, renderer;  // Three.js rendering basics.
+
+var canvas;  // The canvas on which the image is rendered.
+
+
+var model;   // Contains the visible objects in the scene, but
+             // not the lights or camera.  The model can be
+			 // rotated using the keyboard. 
+
+// Nodes in the scene graphs that are modified as part of the animation:
+var sphereRotator;  // The sphere is a child of this object; rotating
+                    // this object about the y-axis rotates the sphere.
+
+var animating = false;  // This is set to true when an animation is running.
+
+var SunSphere, MercSphere, VenusSphere, EarthSphere, MoonSphere, 
+MarsSphere, JupiterSphere, SaturnSphere, NeptuneSphere, UranusSphere, PlutoSphere;//variables to contain the planets
+
+
+/*  Create the scene graph.  This function is called once, as soon as the page loads.
+ *  The renderer has already been created before this function is called.
+ */
+function createWorld() {
+    renderer.setClearColor( 0x000000, 0);  // Set background color (0x444444 is dark gray).
+	scene = new THREE.Scene();
+	
+	// create a camera, sitting on the positive z-axis.  The camera is not part of the scene.
+	camera = new THREE.PerspectiveCamera(45, canvas.width/canvas.height, 0.01, 150);
+	camera.position.z = 25;
+	
+	// create some lights and add them to the scene.
+	scene.add( new THREE.DirectionalLight( 0xffffff, 0.9 ) ); // dim light shining from above
+	var viewpointLight = new THREE.DirectionalLight( 0xffffff, 0.8 );  // a light to shine in the direction the camera faces
+	viewpointLight.position.set(1,0,1);  // shines down the z-axis
+	scene.add(viewpointLight);
+	
+ 	scene.add( new THREE.DirectionalLight(0xff0000, -0.7));// dim light shining from below
+	var viewpointLight = new THREE.DirectionalLight( 0x0000ff, 0.8 );  // a light to shine in the direction the camera faces
+	viewpointLight.position.set(0,-1,0);  // shines up on y axis
+	scene.add(viewpointLight);
+
+	scene.add( new THREE.DirectionalLight(0xf00000, 1));//light shining from above
+	var viewpointLight = new THREE.DirectionalLight( 0x0000ff, 0.8 );  // a light to shine in the direction the camera faces
+	viewpointLight.position.set(0,1,0);  // shines down on y axis
+	scene.add(viewpointLight);
+	// create the model 
+	model = new THREE.Object3D();
+  
+
+	/*
+	* Sun Sphere
+	*/
+	SunSphere = new THREE.Mesh(
+	    new THREE.SphereGeometry(1.7,22,26),
+		new THREE.MeshPhongMaterial({
+		  map: THREE.ImageUtils.loadTexture('maps/sunmap.jpg'),
+      transparent: true,
+      bumpMap: THREE.ImageUtils.loadTexture('images/elev_bump_4k.jpg'),
+      bumpScale:   0.005,
+      specularMap: THREE.ImageUtils.loadTexture('images/water_4k.png'),
+      specular: new THREE.Color('gray')   
+		})
+	);
+	SunSphere.position.x = 0;
+
+	/*
+	* Mercury Sphere
+	*/
+	MercSphere = new THREE.Mesh(
+	    new THREE.SphereGeometry(.3,14,6),
+		new THREE.MeshPhongMaterial({
+		  map: THREE.ImageUtils.loadTexture('maps/mercurymap.jpg'),
+      transparent: true,
+      bumpMap: THREE.ImageUtils.loadTexture('images/elev_bump_4k.jpg'),
+      bumpScale:   0.005,
+      specularMap: THREE.ImageUtils.loadTexture('images/water_4k.png'),
+      specular: new THREE.Color('gray')   
+		})
+	);
+	MercSphere.position.x = -2.7;
+
+	/*
+	* Venus Sphere
+	*/
+	VenusSphere = new THREE.Mesh(
+	    new THREE.SphereGeometry(.5,16,7),
+		new THREE.MeshPhongMaterial({
+		  map: THREE.ImageUtils.loadTexture('maps/venusmap.jpg'),
+      transparent: true,
+      bumpMap: THREE.ImageUtils.loadTexture('maps/venusbump.jpg'),
+      bumpScale:   0.005,
+      specularMap: THREE.ImageUtils.loadTexture('images/water_4k.png'),
+      specular: new THREE.Color('gray')   
+		})
+	);
+	VenusSphere.position.x = -1.8;
+  	VenusSphere.position.z = 3;
+
+	/*
+	* Earth Sphere
+	*/
+	EarthSphere = new THREE.Mesh(
+	    new THREE.SphereGeometry(1, 22, 13),
+		new THREE.MeshPhongMaterial({
+		  map: THREE.ImageUtils.loadTexture('maps/earthmap.jpg'),
+      transparent: true,
+      bumpMap: THREE.ImageUtils.loadTexture('images/elev_bump_4k.jpg'),
+      bumpScale:   0.005,
+      specularMap: THREE.ImageUtils.loadTexture('images/water_4k.png'),
+      specular: new THREE.Color('gray')      
+    }));
+	EarthSphere.position.x = .5;
+	EarthSphere.position.z = -8;
+	EarthSphere.rotation.x = .22;
+
+	/*
+	* Moon Sphere
+	*/
+	MoonSphere = new THREE.Mesh(
+	    new THREE.SphereGeometry(.2, 12, 23),
+		new THREE.MeshPhongMaterial({
+		  map: THREE.ImageUtils.loadTexture('maps/moonmap1k.jpg'),
+      transparent: true,
+      bumpMap: THREE.ImageUtils.loadTexture('images/moonbump1k.jpg'),
+      bumpScale:   0.005,
+      specularMap: THREE.ImageUtils.loadTexture('images/water_4k.png'),
+      specular: new THREE.Color('gray')      
+    }));
+	MoonSphere.position.x = 2;
+	EarthSphere.add(MoonSphere);
+
+	/*
+	* Mars Sphere
+	*/
+	MarsSphere = new THREE.Mesh(
+	    new THREE.SphereGeometry(.8, 22, 13),
+		new THREE.MeshPhongMaterial({
+		  map: THREE.ImageUtils.loadTexture('maps/marsmap1k.jpg'),
+      transparent: true,
+      bumpMap: THREE.ImageUtils.loadTexture('images/marsbump1k.jpg'),
+      bumpScale:   0.005,
+      specularMap: THREE.ImageUtils.loadTexture('images/water_4k.png'),
+      specular: new THREE.Color('gray')      
+    }));
+	MarsSphere.position.x = 6.7;
+	MarsSphere.position.z = 7;
+
+	/*
+	* Jupiter Sphere
+	*/
+	JupiterSphere = new THREE.Mesh(
+	    new THREE.SphereGeometry(2.4, 32, 23),
+		new THREE.MeshPhongMaterial({
+		  map: THREE.ImageUtils.loadTexture('maps/jupitermap.jpg'),
+      transparent: true,
+      bumpMap: THREE.ImageUtils.loadTexture('images/elev_bump_4k.jpg'),
+      bumpScale:   0.005,
+      specularMap: THREE.ImageUtils.loadTexture('images/water_4k.png'),
+      specular: new THREE.Color('gray')      
+    }));
+	JupiterSphere.position.x = 9;
+	JupiterSphere.position.z = 36;
+
+	/*
+	* Saturn Sphere
+	*/
+	SaturnSphere = new THREE.Mesh(
+	    new THREE.SphereGeometry(2, 22, 13),
+		new THREE.MeshPhongMaterial({
+		  map: THREE.ImageUtils.loadTexture('maps/saturnmap.jpg'),
+      transparent: true,
+      bumpMap: THREE.ImageUtils.loadTexture('images/elev_bump_4k.jpg'),
+      bumpScale:   0.005,
+      specularMap: THREE.ImageUtils.loadTexture('images/water_4k.png'),
+      specular: new THREE.Color('gray')      
+    }));
+	SaturnSphere.position.x = 14;
+	SaturnSphere.position.z = -14;
+	
+	/*
+	* Ring of Saturn
+	*/
+	const geometry = new THREE.TorusGeometry( 3, .3, 7, 180 );
+	const material = new THREE.MeshPhongMaterial({
+		  map: THREE.ImageUtils.loadTexture('maps/saturnmap.jpg'), transparent: true,
+		bumpMap: THREE.ImageUtils.loadTexture('images/elev_bump_4k.jpg'),
+		bumpScale:   0.005,
+		specularMap: THREE.ImageUtils.loadTexture('images/water_4k.png'),
+		opacity: 0.8,
+		specular: new THREE.Color('gray') });
+	
+	const torus = new THREE.Mesh( geometry, material );
+	torus.rotation.x = 90;
+	SaturnSphere.add(torus);
+
+	/*
+	* Neptune Sphere
+	*/
+	NeptuneSphere = new THREE.Mesh(
+	    new THREE.SphereGeometry(1.2, 22, 13),
+		new THREE.MeshPhongMaterial({
+		  map: THREE.ImageUtils.loadTexture('maps/neptunemap.jpg'),
+      transparent: true,
+      bumpMap: THREE.ImageUtils.loadTexture('images/elev_bump_4k.jpg'),
+      bumpScale:   0.005,
+      specularMap: THREE.ImageUtils.loadTexture('images/water_4k.png'),
+      specular: new THREE.Color('gray')      
+    }));
+	NeptuneSphere.position.x = 13;
+	NeptuneSphere.position.z = 18;
+
+	/*
+	* Uranus Sphere
+	*/
+	UranusSphere = new THREE.Mesh(
+	    new THREE.SphereGeometry(1.4, 25, 13),
+		new THREE.MeshPhongMaterial({
+		  map: THREE.ImageUtils.loadTexture('maps/uranusmap.jpg'),
+      transparent: true,
+      bumpMap: THREE.ImageUtils.loadTexture('images/elev_bump_4k.jpg'),
+      bumpScale:   0.005,
+      specularMap: THREE.ImageUtils.loadTexture('images/water_4k.png'),
+      specular: new THREE.Color('gray')      
+    }));
+	UranusSphere.position.x = 27;
+	UranusSphere.position.z = 24;
+
+	/*
+	* Pluto Sphere
+	*/
+	PlutoSphere = new THREE.Mesh(
+	    new THREE.SphereGeometry(.3,12, 13),
+		new THREE.MeshPhongMaterial({
+		  map: THREE.ImageUtils.loadTexture('maps/plutomap1k.jpg'),
+      transparent: true,
+      bumpMap: THREE.ImageUtils.loadTexture('images/plutomap1k.jpg'),
+      bumpScale:   0.005,
+      specularMap: THREE.ImageUtils.loadTexture('images/water_4k.png'),
+      specular: new THREE.Color('gray')      
+    }));
+	PlutoSphere.position.x = 20;
+	
+  //add sphere rotators to each planet
+  sphereRotator = new THREE.Object3D();
+  sphereRotator.add(SunSphere);
+  sphereRotator.add(MercSphere);
+  sphereRotator.add(VenusSphere);
+  sphereRotator.add(EarthSphere);
+  sphereRotator.add(MarsSphere);
+  sphereRotator.add(JupiterSphere);
+  sphereRotator.add(SaturnSphere);
+  sphereRotator.add(NeptuneSphere);
+  sphereRotator.add(UranusSphere);
+  sphereRotator.add(PlutoSphere);
+
+  //add sphere rotator the the model
+  model.add(sphereRotator);
+
+  model.rotation.set(0.3,0,0); // Tip it forward a bit, so we're not looking at it edge-on.
+  model.position.y = 4;
+  model.position.x = -2;
+	
+  //add model to the scene
+  scene.add(model);
+}
+
+
+/*  Render the scene.  This is called for each frame of the animation.
+ */
+function render() {
+    renderer.render(scene, camera);
+}
+
+
+/*  When an animation is in progress, this function is called just before rendering each
+ *  frame of the animation, to make any changes necessary in the scene graph to prepare
+ *  for that frame.
+ */
+function updateForFrame() {
+    sphereRotator.rotation.y += 0.002;
+	SunSphere.rotation.y += .01;
+	MercSphere.rotation.y += .004;
+	VenusSphere.rotation.y +=.005;
+	EarthSphere.rotation.y +=.007;
+	MoonSphere.rotation.y += .01;
+	MarsSphere.rotation.y +=.006;
+	JupiterSphere.rotation.y +=.005;
+	SaturnSphere.rotation.y +=.004;
+	NeptuneSphere.rotation.y +=.015;
+	UranusSphere.rotation.y +=.0045;
+	PlutoSphere.rotation.y +=.005;
+}
+
+
+//--------------------------- animation support -----------------------------------
+
+/* This function runs the animation by calling updateForFrame() then calling render().
+ * Finally, it arranges for itself to be called again to do the next frame.  When the
+ * value of animating is set to false, this function does not schedule the next frame,
+ * so the animation stops.
+ */
+function doFrame() {
+    if (animating) {
+        updateForFrame();
+        render();
+        requestAnimationFrame(doFrame); 
+	}
+}
+
+
+/* Responds when the setting of the "Animate" checkbox is changed.  This
+ * function will start or stop the animation, depending on its setting.
+ */
+function doAnimateCheckbox() {
+    var anim = document.getElementById("animate").checked;
+	if (anim != animating) {
+		animating = anim;
+		if (animating) {
+			doFrame();
+		}
+	}
+}
+
+
+
+//----------------------------- keyboard support ----------------------------------
+
+/*  Responds to user's key press.  Here, it is used to rotate the model.
+ */
+function doKey(event) {
+	var code = event.keyCode;
+	var rotated = true;
+	switch( code ) {
+	    case 37: model.rotation.y -= 0.03;  break;    // left arrow
+	    case 39: model.rotation.y +=  0.03; break;    // right arrow
+	    case 38: model.rotation.x -= 0.03;  break;    // up arrow
+	    case 40: model.rotation.x += 0.03;  break;    // down arrow
+	    case 33: model.rotation.z -= 0.03;  break;    // page up
+	    case 34: model.rotation.z += 0.03;  break;    // page down
+	    case 36: model.rotation.set(0.2,0,0); break;  // home
+	    default: rotated = false;
+	}
+	if (rotated) {
+		event.preventDefault();  // Prevent keys from scrolling the page.
+		if (!animating) { // (if an animation is running, no need for an extra render)
+			render();
+		}
+	}
+}
+
+
+
+//----------------------------------------------------------------------------------
+
+/**
+ *  This init() function is called when by the onload event when the document has loaded.
+ */
+function init() {
+	try {
+	    canvas = document.getElementById("glcanvas");
+		renderer = new THREE.WebGLRenderer( {
+		    canvas: canvas,
+		    antialias: true,
+			alpha: true
+		} );
+	}
+	catch (e) {
+		document.getElementById("canvas-holder").innerHTML =
+		         "<h3><b>Sorry, WebGL is required but is not available.</b><h3>";
+		return;
+	}
+	document.addEventListener("keydown", doKey, false);
+	document.getElementById("animate").checked = false;
+	document.getElementById("animate").onchange = doAnimateCheckbox;
+	createWorld();
+	render();
+}
+
+</script>
+</head>
+<body onload="init()">
+
+<h2 class = "class1">Our Solar System</h2>
+
+<p><b class = "bclass"> >> Click the animate button to start and stop the animation</b></p>
+<p><b class = "bclass"> >> Use arrow keys to rotate the solar system</b></p>
+<p><b class = "bclass"> >> Note: if not animation begins, run on local server!</b></p>
+
+<p><label class="class2"><input type="checkbox" id="animate" > Animate</label>
+</p>
+
+<div id="canvas-holder">
+<canvas id="glcanvas" width="1000" height="700"></canvas>
+</div>
+
+</body>
+</html>
